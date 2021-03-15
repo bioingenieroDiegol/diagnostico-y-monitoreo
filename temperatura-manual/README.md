@@ -1,6 +1,6 @@
-# Diagnóstico y Monitoreo (DyM) #
+# Diagnóstico y Monitoreo #
 ## Facultad de Ingeniería - UNER ##
-## 2019 - 2021 ##
+## 2019 ##
 
 Sistema de adquisición con Arduino para el registro de temperatura en el TPL1.
 
@@ -11,32 +11,6 @@ librerías:
 - pyserial
 
 Las instrucciones son un poco diferentes en Windows y Linux. 
-
-Linux
------
-
-Como el resto de las librerías de Python, se pueden instalar con pip o conda.
-Por ejemplo:
-
-~~~~
-pip install pyqtgraph
-pip install pyserial
-~~~~
-
-Para evitar el error por falta de privilegios para acceder al puerto USB es
-necesario agregar nuestro usuario al grupo con autorización. Para usuarios de
-Arch y derivados (luego hay que desloguearse y volver a loguear):
-
-~~~~
-sudo usermod -a -G uucp $USER
-~~~~
-
-Para usuarios de Ubuntu y derivados (luego hay que desloguearse y volver a
-loguear):
-
-~~~~
-sudo usermod -a -G dialout $USER
-~~~~
 
 
 Windows
@@ -103,7 +77,7 @@ el directorio local donde estén alojados. Para que corran escribir:
 
 ó 
 
-   python temperatura-manual.py
+   python temperatura-manual.python
    
    
 PELIGRO - DANGER - GEFAHR - ОПАСНО - PERIGO - VAARA
@@ -118,4 +92,3 @@ necesario renombrar y/o mover los archivos de texto.
 
 
 
-# diagnostico-y-monitoreo
