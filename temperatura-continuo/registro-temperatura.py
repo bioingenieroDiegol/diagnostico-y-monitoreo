@@ -9,6 +9,9 @@
 # se realiza a 100 Hz (T=10ms).
 
 from PyQt5 import QtCore, QtGui
+
+from PyQt5.QtWidgets import QMainWindow, QApplication
+
 from pantallaRegistroTemperatura import Ui_Temperatura
 import numpy as np
 import serial
@@ -35,9 +38,9 @@ class Registro():
 
 
 
-class Window(QtGui.QMainWindow):
+class Window(QMainWindow):
     def __init__(self, reg):
-        QtGui.QMainWindow.__init__(self)
+        QMainWindow.__init__(self)
         self.ui = Ui_Temperatura()
         self.ui.setupUi(self)
         self.datosAdquiridos = 0
@@ -49,6 +52,7 @@ class Window(QtGui.QMainWindow):
         self.reg = Registro()
 
         self.ser = serial.Serial('/dev/ttyACM0', 115200)
+        # self.ser = serial.Serial('COM3', 115200)
         self.ser.flushInput()
 
         # fija la cantidad de datos inicial que serán registrados y graficados (50 es razonable?)
@@ -150,7 +154,7 @@ if __name__ == '__main__':
     import sys
 
     ## initializing Qt (only once per application)
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     reg = Registro()
     # print(reg.vector)
 

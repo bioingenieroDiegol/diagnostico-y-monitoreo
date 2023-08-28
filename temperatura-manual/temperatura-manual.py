@@ -11,6 +11,8 @@
 # acuerdo al contenido que se le va agregando.
 
 from PyQt5 import QtCore, QtGui
+from PyQt5.QtWidgets import QMainWindow, QApplication
+
 from pantallaTemperaturaManual import Ui_TemperaturaManual
 
 import numpy as np
@@ -45,9 +47,9 @@ class Registro():
 
 
 
-class Window(QtGui.QMainWindow):
+class Window(QMainWindow):
     def __init__(self, reg):
-        QtGui.QMainWindow.__init__(self)
+        QMainWindow.__init__(self)
         self.ui = Ui_TemperaturaManual()
         self.ui.setupUi(self)
         self.datosAdquiridos = 0
@@ -58,6 +60,7 @@ class Window(QtGui.QMainWindow):
 
         self.reg = Registro()
 
+        # self.ser = serial.Serial('COM3', 115200)
         self.ser = serial.Serial('/dev/ttyACM0', 115200)
         self.ser.flushInput()
 
@@ -170,7 +173,7 @@ if __name__ == '__main__':
     import sys
 
     ## initializing Qt (only once per application)
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     reg = Registro()
     # print(reg.vector)
 
