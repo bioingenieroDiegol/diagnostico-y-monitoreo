@@ -1,47 +1,78 @@
-# Registro de la Temperatura mediante Arduino.
-# Abril 2019. Agosto 2019.
+# Registro de la presión arterial mediante el método oscilométrico
+#
+#
+# Agosto 2023.
 # Instrumental Biomédico para Diagnóstico y Monitoreo
 # Facultad de Ingeniería.
 # UNER
+#
+#
+# Se utiliza un sensor MPX50 o MPX100 conectado al Arduino a través
+# de un conversor ADS1115. Probado con la librería ADS111X de
+# Adafruit con el ejemplo: Differential.
+#
+#
+# Los datos se digitalizan con un ADS1115 que envía los datos de 16
+# bits mediante comunicación I2C al Arduino, y desde allí se utiliza
+# comunicación serie para enviar los datos a la PC.
+#
+#
+# La adquisición se realiza a 100 Hz (T=10ms).
+#
+#
+# La interfaz gráfica está construida con PyQt5. Para convertir el
+# archivo .ui generado en código de Python se utiliza:
+# pyuic5 -x pantallaRegistro.ui -o pantallaRegistro.py
+#
+#
 
-# Los datos se registran desde la entrada Analog In 0 del Arduino (ver software
-# Arduino). La placa los envía por puerto serie y se grafican. La adquisición
-# se realiza a 100 Hz (T=10ms).
-
-from PyQt5 import QtCore, QtGui
+from PyQt5 import QtCore
 
 from PyQt5.QtWidgets import QMainWindow, QApplication
 
-from pantallaRegistroTemperatura import Ui_Temperatura
+from pantallaRegistroPresion import Ui_Presion
 import numpy as np
 import serial
 
-class Registro():
-    def __init__(self, tam=500):
-        self.tam = tam
-        self.index = 0
-        self.vector = np.zeros([tam])
+from datetime import datetime
 
-    def modificarTam(self, nuevoTam):
-        self.tam = nuevoTam
+
+
+class Registro():
+    def __init__(self, tiempo=5, frecuencia=100):
+        self.tiempo     = tiempo       # en segundos
+        self.frecuencia = frecuencia   # en Hertz
+        self.periodo    = 0.100        # en segundos
+        self.tam = int(self.tiempo / self.periodo)
+        # print("tamaño vector: ", self.tam)
         self.index = 0
-        self.vector = np.zeros([nuevoTam])
+        self.vector = np.zeros([self.tam])
+
+    def modificarTiempo(self, tiempo):
+        self.tiempo = tiempo
+        self.tam = int(self.tiempo / self.periodo)
+        # print("nuevo tamaño vector: ", self.tam)        
+        self.index = 0
+        self.vector = np.zeros([self.tam])
 
     def agregarDato(self, dato):
         self.vector[self.index] = dato
         self.index = self.index+1
         if (self.index >= self.tam):
             self.index = 0
+        # print("index: ", self.index)
 
     def grabarVector(self):
-        np.savetxt("registro-de-temperatura.txt", self.vector)
-
+        now = datetime.now()
+        fechayhora = now.strftime("%Y%m%d-%H%M%S.txt")
+        np.savetxt(fechayhora, self.vector)
+        print("Archivo grabado: ", fechayhora)
 
 
 class Window(QMainWindow):
     def __init__(self, reg):
         QMainWindow.__init__(self)
-        self.ui = Ui_Temperatura()
+        self.ui = Ui_Presion()
         self.ui.setupUi(self)
         self.datosAdquiridos = 0
 
@@ -49,39 +80,46 @@ class Window(QMainWindow):
         self.curva = self.p.plot()
         self.curva.setPen((255,0,0))
 
-        self.reg = Registro()
+        # inicialización del registro
+        tiempo = 5             # en segundos
+        frecuencia = 100       # en Hertz
+        self.reg = Registro(tiempo, frecuencia)
 
-        self.ser = serial.Serial('/dev/ttyACM0', 115200)
-        # self.ser = serial.Serial('COM3', 115200)
-        self.ser.flushInput()
-
-        # fija la cantidad de datos inicial que serán registrados y graficados (50 es razonable?)
-        self.ui.sB_cantDatos.setValue(reg.tam)
-
+        # fija la cantidad de datos inicial que serán registrados y graficados
+        self.ui.sB_Tiempo.setValue(reg.tiempo)
+ 
         # fija los extremos del gráfico temporal
         self.x1 = 0
-        self.x2 = self.ui.sB_cantDatos.value()
+        self.x2 = reg.tam
         self.y1 = 0
-        self.y2 = 1024
+        self.y2 = 65536   # 65536 son 16 bits, 1024 son 10 bits 
         self.setearLimitesPlot(self.x1,self.x2,self.y1,self.y2)
-
-        # fija período (en ms)
-        self.periodo = 10
 
         # conexiones para dar servicio a los botones
         self.ui.pB_iniciar.clicked.connect(self.iniciarTimer)
         self.ui.pB_finalizar.clicked.connect(self.detenerTimer)
-        self.ui.sB_cantDatos.valueChanged.connect(self.cambiarCantDatos)
+        self.ui.sB_Tiempo.valueChanged.connect(self.cambiarTiempo)
         self.ui.pB_grabar.clicked.connect(self.grabar)
         self.ui.accionSalir.triggered.connect(self.salir)
-        # self.ui.pB_grabar.clicked.connect(grabarDatos)
 
+        # inicialización de la comunicación serie
+        self.ser = serial.Serial('/dev/ttyACM0', 115200)
+        # self.ser = serial.Serial('COM3', 115200)
+        self.ser.flushInput()
+
+        # inicialización del timer (para la lectura de datos)
         self.timer = QtCore.QTimer()
 
-    def cambiarCantDatos(self):
-        nuevoMax = window.ui.sB_cantDatos.value()
-        self.x2 = nuevoMax
-        reg.modificarTam(nuevoMax)
+    def cambiarTiempo(self):
+
+        nuevoTiempo = window.ui.sB_Tiempo.value()
+
+        # actualizamos los parámetros del registro
+        reg.modificarTiempo(nuevoTiempo)
+
+        # actualizamos los límites del gráfico
+        
+        self.x2 = reg.tam
         # print("-------------------------> max X: ", self.x2)
         self.setearLimitesPlot(self.x1, self.x2, self.y1, self.y2)
 
@@ -103,8 +141,11 @@ class Window(QMainWindow):
         self.ser.flushInput()
         self.borrarCurva()
         # periodo = window.ui.sB_periodo.value()
+
+        
+        periodo = int(reg.periodo * 1000)  # cambio a milisegundos
         # print("periodo de adquisición: ", periodo)
-        self.timer.start(self.periodo)
+        self.timer.start(periodo)
         self.timer.timeout.connect(self.update)
 
     def detenerTimer(self):
@@ -124,7 +165,7 @@ class Window(QMainWindow):
         try:
             ser_bytes = self.ser.readline()
             nuevo_numero = int(ser_bytes[0:len(ser_bytes)-2].decode("utf-8"))
-            # print(nuevo_numero)
+            # print("nuevo número: ", nuevo_numero)
         except:
             print("Keyboard Interrupt")
 
@@ -136,7 +177,8 @@ class Window(QMainWindow):
         # window.graficar(vector)
         # self.graficar(reg.vector)
         self.actualizarPlot()
-        if self.datosAdquiridos >= window.ui.sB_cantDatos.value():
+        # if self.datosAdquiridos >= window.ui.sB_Tiempo.value():        
+        if self.datosAdquiridos >= reg.tam:
             self.detenerTimer()
 
 
