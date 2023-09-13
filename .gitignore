@@ -1,3 +1,6 @@
+# saco los txt porque no quiero guardar los registros
+*.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

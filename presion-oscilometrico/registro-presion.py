@@ -45,6 +45,7 @@ class Registro():
         self.periodo    = 0.100        # en segundos
         self.tam = int(self.tiempo / self.periodo)
         # print("tamaño vector: ", self.tam)
+
         self.index = 0
         self.vector = np.zeros([self.tam])
 
@@ -141,8 +142,6 @@ class Window(QMainWindow):
         self.ser.flushInput()
         self.borrarCurva()
         # periodo = window.ui.sB_periodo.value()
-
-        
         periodo = int(reg.periodo * 1000)  # cambio a milisegundos
         # print("periodo de adquisición: ", periodo)
         self.timer.start(periodo)
@@ -165,7 +164,6 @@ class Window(QMainWindow):
         try:
             ser_bytes = self.ser.readline()
             nuevo_numero = int(ser_bytes[0:len(ser_bytes)-2].decode("utf-8"))
-            # print("nuevo número: ", nuevo_numero)
         except:
             print("Keyboard Interrupt")
 
