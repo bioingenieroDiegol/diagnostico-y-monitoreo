@@ -15,6 +15,7 @@ from PyQt5.QtWidgets import QMainWindow, QApplication
 from pantallaRegistroTemperatura import Ui_Temperatura
 import numpy as np
 import serial
+from serial.tools.list_ports import comports
 
 class Registro():
     def __init__(self, tam=500):
@@ -51,7 +52,38 @@ class Window(QMainWindow):
 
         self.reg = Registro()
 
-        self.ser = serial.Serial('/dev/ttyACM0', 115200)
+
+
+
+
+
+        # Función para leer la configuración del puerto desde un archivo
+        def leer_configuracion_puerto(archivo):
+            try:
+                with open(archivo, 'r') as f:
+                    puerto = None
+                    velocidad = None
+                    for linea in f:
+                        if linea.startswith('puerto:'):
+                            puerto = linea.split(':')[1].strip()  # Obtener el valor después de ':' y eliminar espacios en blanco
+                        elif linea.startswith('velocidad:'):
+                            velocidad = int(linea.split(':')[1])  # Obtener el valor después de ':' y convertirlo a entero
+                    return puerto, velocidad
+            except Exception as e:
+                print("Error al leer el archivo de configuración:", e)
+                return None, None
+
+        puerto, velocidad = leer_configuracion_puerto('puerto.txt')
+
+        if puerto and velocidad:
+            self.ser = serial.Serial(puerto, velocidad)
+            print("Puerto: ", puerto)
+            print("Velocidad: ", velocidad)
+        else:
+            print("No se pudo leer la configuración del puerto desde el archivo 'puerto.txt'.")
+
+    
+        # self.ser = serial.Serial('/dev/ttyACM0', 115200)
         # self.ser = serial.Serial('COM3', 115200)
         self.ser.flushInput()
 
