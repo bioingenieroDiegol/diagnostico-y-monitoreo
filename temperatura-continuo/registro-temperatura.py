@@ -14,8 +14,7 @@ from PyQt5.QtWidgets import QMainWindow, QApplication
 
 from pantallaRegistroTemperatura import Ui_Temperatura
 import numpy as np
-import serial
-from serial.tools.list_ports import comports
+import serial, datetime, os
 
 class Registro():
     def __init__(self, tam=500):
@@ -35,7 +34,15 @@ class Registro():
             self.index = 0
 
     def grabarVector(self):
-        np.savetxt("registro-de-temperatura.txt", self.vector)
+
+        subdirectorio = "registros"
+        
+        if not os.path.exists(subdirectorio):
+            os.makedirs(subdirectorio)
+
+        now = datetime.datetime.now()
+        nombre_archivo = "{}/registro___{}-{}-{}___{}-{}-{}.txt".format(subdirectorio, now.year, now.month, now.day, now.hour, now.minute, now.second)
+        np.savetxt(nombre_archivo, self.vector)
 
 
 

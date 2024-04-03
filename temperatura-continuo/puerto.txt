@@ -1,0 +1,7 @@
+; linux
+puerto: /dev/ttyACM0
+velocidad: 115200
+
+; windows
+; puerto: COM3
+; velocidad: 115200

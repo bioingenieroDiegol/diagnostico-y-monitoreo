@@ -1,5 +1,5 @@
 # saco los txt porque no quiero guardar los registros
-*.txt
+registros/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
